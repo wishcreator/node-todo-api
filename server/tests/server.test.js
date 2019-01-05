@@ -11,7 +11,7 @@ const todos = [
 ]
 
 beforeEach(done => {
-  Todo.remove({}).then(() => {
+  Todo.deleteMany({}).then(() => {
     return Todo.insertMany(todos);
   }).then(() => done());
 });
@@ -86,6 +86,37 @@ describe('GET /todos/:id', () => {
 
   it('should return 404 for non object ids', done => {
     request(app).get(`/todos/123`)
+    .expect(404).end(done);
+  });
+
+});
+describe('delete /Todos', () =>{
+  const hexId = todos[0]._id.toHexString();
+  it('Should remove todo',done => {
+    request(app).delete(`/todos/${hexId}`)
+    .expect(200)
+    .expect(res => {
+      console.log(res.body);
+      expect(res.body.todo._id).toBe(hexId);
+    }).end((err, res) => {
+      if(err) return done(err);
+
+      Todo.findById(hexId).then(todo => {
+        expect(todo).toNotExist();
+        done();
+      }).catch(e => {
+        done(e);
+      });
+    });
+  });
+
+  it('should return 404 if todo not found', done => {
+    request(app).delete(`/todos/5c2fcdade301a63ac0aa7972`)
+    .expect(404).end(done);
+  });
+
+  it('should return 404 for non object ids', done => {
+    request(app).delete(`/todos/123`)
     .expect(404).end(done);
   });
 
